@@ -410,6 +410,27 @@ router.post('/', verifyToken, upload.single('image'), async (req, res) => {
     }
 });
 
+/**
+ * TEMPORARY REPAIR ROUTE
+ * PATCH /api/artworks/:id/enable-sale
+ * Forces an artwork to be for sale.
+ */
+router.patch('/:id/enable-sale', async (req, res) => {
+    try {
+        const artwork = await Artwork.findById(req.params.id);
+        if (!artwork) return res.status(404).json({ message: 'Not found' });
+
+        artwork.isForSale = true;
+        // Ensure price exists if missing
+        if (!artwork.price) artwork.price = 100;
+
+        await artwork.save();
+        res.json({ message: 'Fixed! Artwork is now for sale.', artwork });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // ============================================================================
 // ROUTE: LIKE/UNLIKE ARTWORK
 // ============================================================================
