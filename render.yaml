@@ -1,15 +1,15 @@
 services:
   - type: web
-    name: artfolio-server
+    name: artfolio
     env: node
-    rootDir: server
-    buildCommand: npm install
-    startCommand: node index.js
+    rootDir: .
+    buildCommand: npm run build
+    startCommand: npm start
     plan: free
     envVars:
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET
         generateValue: true
-      - key: CLIENT_URL
-        value: https://artfolio-client-1765860529.netlify.app
+      - key: NODE_ENV
+        value: production

@@ -102,7 +102,12 @@ mongoose.connect(MONGO_URI)
  * Simple route to verify the server is running
  * Access at: http://localhost:5001/
  */
-app.get('/', (req, res) => {
+/**
+ * Health Check Endpoint
+ * Simple route to verify the server is running
+ * Access at: http://localhost:5001/api/health
+ */
+app.get('/api/health', (req, res) => {
     res.send('ArtFolio API Running');
 });
 
@@ -134,6 +139,33 @@ app.use('/api/admin', adminRoutes);          // Admin routes
 // ============================================================================
 // SERVER STARTUP
 // ============================================================================
+
+/**
+ * Start the Express server
+ * PORT is read from .env file, defaults to 5000 if not specified
+ * Server will listen for incoming HTTP requests on this port
+ */
+// ============================================================================
+// STATIC ASSET HANDLING (PRODUCTION)
+// ============================================================================
+
+// Serve static files from the React frontend app
+const clientBuildPath = path.join(__dirname, '../client/dist');
+app.use(express.static(clientBuildPath));
+
+// API routes are already defined above...
+
+// The "catch-all" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+    // Check if the file exists to avoid ENOENT errors
+    const indexPath = path.join(clientBuildPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).send('Not Found: Client build not found. Run "npm run build" in client directory.');
+    }
+});
 
 /**
  * Start the Express server

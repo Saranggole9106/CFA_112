@@ -1,0 +1,16 @@
+{
+    "name": "artfolio-fullstack",
+    "version": "1.0.0",
+    "description": "ArtFolio Full Stack Application",
+    "scripts": {
+        "start": "node server/index.js",
+        "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+        "dev": "concurrently \"npm run start --prefix server\" \"npm run dev --prefix client\""
+    },
+    "dependencies": {
+        "concurrently": "^8.2.0"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    }
+}
