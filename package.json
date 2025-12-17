@@ -4,7 +4,7 @@
     "description": "ArtFolio Full Stack Application",
     "scripts": {
         "start": "node server/index.js",
-        "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+        "build": "npm install --prefix server && npm install --include=dev --prefix client && npm run build --prefix client",
         "dev": "concurrently \"npm run start --prefix server\" \"npm run dev --prefix client\""
     },
     "dependencies": {
