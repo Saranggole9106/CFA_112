@@ -21,58 +21,9 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');  // For creating and verifying tokens
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const { verifyToken } = require('../middleware/auth');
 
-// ============================================================================
-// MIDDLEWARE - TOKEN VERIFICATION
-// ============================================================================
-
-/**
- * Verify Token Middleware
- * 
- * Checks if request has a valid JWT token in the Authorization header.
- * If valid, adds user info to req.user for use in route handlers.
- * If invalid or missing, returns error.
- * 
- * Used by protected routes that require authentication.
- * 
- * Header format: "Authorization: Bearer <token>"
- * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-const verifyToken = (req, res, next) => {
-    // Get the Authorization header
-    const token = req.header('Authorization');
-
-    // Check if token exists
-    if (!token) {
-        return res.status(401).json({ message: 'Access Denied' });
-    }
-
-    try {
-        // Extract token from "Bearer <token>" format
-        // Split by space and take second part
-        const tokenValue = token.split(" ")[1];
-
-        // Verify token with secret key
-        // If valid, returns decoded payload (user id and role)
-        const verified = jwt.verify(
-            tokenValue,
-            process.env.JWT_SECRET || 'secretKey'  // Use env variable or fallback
-        );
-
-        // Add user info to request object
-        // Now route handlers can access req.user
-        req.user = verified;
-
-        // Continue to next middleware/route handler
-        next();
-    } catch (err) {
-        // Token is invalid, expired, or malformed
-        res.status(400).json({ message: 'Invalid Token' });
-    }
-};
+// Middleware imported from ../middleware/auth.js
 
 // ============================================================================
 // ROUTE: REGISTER NEW USER
@@ -115,10 +66,27 @@ router.post('/register', async (req, res) => {
         // Extract data from request body
         const { username, email, password, role } = req.body;
 
+        // Input validation
+        if (!username || username.length < 3) {
+            return res.status(400).json({ message: 'Username must be at least 3 characters' });
+        }
+        if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            return res.status(400).json({ message: 'Please provide a valid email address' });
+        }
+        if (!password || password.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
+
         // Check if user with this email already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
             return res.status(400).json({ message: 'Email already exists' });
+        }
+
+        // Check if username already exists
+        const existingUsername = await User.findOne({ username });
+        if (existingUsername) {
+            return res.status(400).json({ message: 'Username already taken' });
         }
 
         // Create new user document
@@ -205,12 +173,22 @@ router.post('/login', async (req, res) => {
         // Extract credentials from request body
         const { email, password } = req.body;
 
+        // Input validation
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password are required' });
+        }
+
         // Find user by email
         const user = await User.findOne({ email });
 
         // Check if user exists
         if (!user) {
             return res.status(400).json({ message: 'User not found' });
+        }
+
+        // Check if user is banned
+        if (user.banned) {
+            return res.status(403).json({ message: 'Your account has been banned. Contact support for assistance.' });
         }
 
         // Verify password

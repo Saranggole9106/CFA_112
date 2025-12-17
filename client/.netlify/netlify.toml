@@ -28,10 +28,10 @@ command = "npm run build"
 [build.services]
 
 [[redirects]]
-from = "/*"
-to = "/index.html"
+from = "/api/*"
+to = "https://artfolio-server.onrender.com/api/:splat"
 status = 200.0
-force = false
+force = true
 
 [redirects.query]
 
@@ -40,10 +40,10 @@ force = false
 [redirects.headers]
 
 [[redirects]]
-from = "/api/*"
-to = "https://CHANGE-ME-TO-YOUR-BACKEND-URL.com/api/:splat"
+from = "/*"
+to = "/index.html"
 status = 200.0
-force = true
+force = false
 
 [redirects.query]
 

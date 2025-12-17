@@ -2,16 +2,16 @@
   command = "npm run build"
   publish = "dist"
 
+# Proxy API requests to the backend
+# IMPORTANT: You must update this URL to point to your deployed backend (e.g. Render, Heroku)
+[[redirects]]
+  from = "/api/*"
+  to = "https://artfolio-server.onrender.com/api/:splat"
+  status = 200
+  force = true
+
 # Handle Single Page Application (SPA) routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-# Proxy API requests to the backend
-# IMPORTANT: You must update this URL to point to your deployed backend (e.g. Render, Heroku)
-[[redirects]]
-  from = "/api/*"
-  to = "https://CHANGE-ME-TO-YOUR-BACKEND-URL.com/api/:splat"
-  status = 200
-  force = true

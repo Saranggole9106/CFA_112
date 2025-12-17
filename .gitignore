@@ -1,37 +1,33 @@
 # Dependencies
 node_modules/
-package-lock.json
+.pnp
+.pnp.js
 
-# Environment variables
+# Testing
+coverage/
+
+# Production
+build/
+dist/
+
+# Misc
+.DS_Store
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Build outputs
-dist/
-build/
-*.log
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Uploads (images uploaded by users)
-server/uploads/*
-!server/uploads/.gitkeep
+# Uploads
+uploads/
+server/uploads/
+client/public/uploads/
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE
+# IDEs
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
-
-# Testing
-coverage/
-
-# Misc
-*.pem
-.cache/

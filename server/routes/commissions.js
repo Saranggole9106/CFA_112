@@ -20,36 +20,10 @@
 const express = require('express');
 const router = express.Router();
 const Commission = require('../models/Commission');
-const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const { verifyToken } = require('../middleware/auth');
 
-// ============================================================================
-// MIDDLEWARE - TOKEN VERIFICATION
-// ============================================================================
-
-/**
- * Verify Token Middleware
- * 
- * Authenticates user by checking JWT token.
- * Required for all commission routes (must be logged in).
- * 
- * Adds req.user with { _id, role } from token payload.
- */
-const verifyToken = (req, res, next) => {
-    const token = req.header('Authorization');
-    if (!token) return res.status(401).json({ message: 'Access Denied' });
-
-    try {
-        // Extract and verify token
-        const verified = jwt.verify(
-            token.split(" ")[1],
-            process.env.JWT_SECRET || 'secretKey'
-        );
-        req.user = verified;
-        next();
-    } catch (err) {
-        res.status(400).json({ message: 'Invalid Token' });
-    }
-};
+// Middleware imported from ../middleware/auth.js
 
 // ============================================================================
 // ROUTE: CREATE COMMISSION REQUEST
@@ -94,6 +68,26 @@ router.post('/', verifyToken, async (req, res) => {
     try {
         // Extract data from request body
         const { artistId, brief, deadline } = req.body;
+
+        // Validate required fields
+        if (!artistId) {
+            return res.status(400).json({ message: 'Artist ID is required' });
+        }
+        if (!brief || brief.trim().length < 10) {
+            return res.status(400).json({ message: 'Please provide a detailed brief (at least 10 characters)' });
+        }
+
+        // Validate that artistId exists and is an artist
+        const artist = await User.findById(artistId);
+        if (!artist) {
+            return res.status(404).json({ message: 'Artist not found' });
+        }
+        if (artist.role !== 'artist') {
+            return res.status(400).json({ message: 'Selected user is not an artist' });
+        }
+        if (!artist.commissionOpen) {
+            return res.status(400).json({ message: 'This artist is not currently accepting commissions' });
+        }
 
         // Create new commission document
         const commission = new Commission({
@@ -246,8 +240,8 @@ router.patch('/:id', verifyToken, async (req, res) => {
         }
 
         // Authorization check: Only the artist can update their commission
-        // Convert ObjectId to string for comparison
-        if (commission.artist.toString() !== req.user._id) {
+        // Convert both to string for proper comparison
+        if (commission.artist.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'Unauthorized' });
         }
 

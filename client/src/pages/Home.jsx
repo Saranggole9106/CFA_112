@@ -1,84 +1,573 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Palette, Heart, ShoppingBag, Users, Award, ArrowRight, Star, Zap, Globe } from 'lucide-react';
 import MasonryGrid from '../components/MasonryGrid';
 
 const Home = () => {
-    const [featuredArtworks, setFeaturedArtworks] = React.useState([]);
+    const [featuredArtworks, setFeaturedArtworks] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [activeFeature, setActiveFeature] = useState(0);
 
-    React.useEffect(() => {
+    const features = [
+        {
+            icon: Palette,
+            title: "Showcase Your Art",
+            description: "Create a stunning portfolio to display your masterpieces to the world",
+            color: "#8b5cf6"
+        },
+        {
+            icon: Heart,
+            title: "Build Community",
+            description: "Connect with art lovers, receive feedback, and grow your audience",
+            color: "#ec4899"
+        },
+        {
+            icon: ShoppingBag,
+            title: "Sell Your Work",
+            description: "Monetize your creativity with print sales and commission requests",
+            color: "#22c55e"
+        },
+        {
+            icon: Award,
+            title: "Get Discovered",
+            description: "Featured collections and curated galleries highlight exceptional talent",
+            color: "#f59e0b"
+        }
+    ];
+
+    const stats = [
+        { value: "10K+", label: "Artists", icon: Users },
+        { value: "50K+", label: "Artworks", icon: Palette },
+        { value: "100K+", label: "Art Lovers", icon: Heart },
+        { value: "$2M+", label: "Earned", icon: Zap }
+    ];
+
+    useEffect(() => {
         const fetchArtworks = async () => {
             try {
                 const res = await fetch('/api/artworks');
                 if (res.ok) {
                     const data = await res.json();
-                    setFeaturedArtworks(data.slice(0, 6));
+                    setFeaturedArtworks(data.slice(0, 8));
                 }
             } catch (err) {
                 console.error('Failed to fetch featured artworks', err);
+            } finally {
+                setIsLoading(false);
             }
         };
         fetchArtworks();
     }, []);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setActiveFeature((prev) => (prev + 1) % features.length);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
-        <div style={{ paddingTop: '100px', minHeight: '100vh', paddingBottom: '60px' }}>
+        <div style={{ minHeight: '100vh', overflow: 'hidden' }}>
             {/* Hero Section */}
-            <section className="container" style={{
+            <section style={{
+                position: 'relative',
+                minHeight: '100vh',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
-                textAlign: 'center',
-                padding: '100px 0',
-                position: 'relative'
+                justifyContent: 'center',
+                paddingTop: '100px',
+                paddingBottom: '60px'
             }}>
-                {/* Background Glow */}
+                {/* Animated Background */}
                 <div style={{
                     position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '600px',
-                    height: '600px',
-                    background: 'radial-gradient(circle, rgba(109, 40, 217, 0.15) 0%, rgba(0,0,0,0) 70%)',
-                    zIndex: -1,
-                    pointerEvents: 'none'
-                }}></div>
-
-                <h1 className="animate-fade-in" style={{ fontSize: '4rem', fontWeight: '800', marginBottom: '1.5rem', lineHeight: '1.1' }}>
-                    Discover Digital <br />
-                    <span className="text-gradient">Masterpieces</span>
-                </h1>
-
-                <p className="animate-fade-in" style={{
-                    fontSize: '1.2rem',
-                    color: 'var(--color-text-muted)',
-                    maxWidth: '600px',
-                    marginBottom: '2.5rem',
-                    animationDelay: '0.2s'
+                    inset: 0,
+                    overflow: 'hidden',
+                    zIndex: -1
                 }}>
-                    The premier platform for artists to showcase work, manage commissions, and connect with art lovers worldwide.
-                </p>
+                    {/* Primary Gradient Orb */}
+                    <motion.div
+                        animate={{
+                            scale: [1, 1.2, 1],
+                            opacity: [0.3, 0.5, 0.3],
+                        }}
+                        transition={{
+                            duration: 8,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                        style={{
+                            position: 'absolute',
+                            top: '10%',
+                            left: '20%',
+                            width: '600px',
+                            height: '600px',
+                            background: 'radial-gradient(circle, rgba(124, 58, 237, 0.4) 0%, transparent 70%)',
+                            filter: 'blur(60px)',
+                        }}
+                    />
 
-                <div className="animate-fade-in" style={{ display: 'flex', gap: '1rem', animationDelay: '0.4s' }}>
-                    <Link to="/explore" className="btn-primary">Start Exploring</Link>
-                    <Link to="/register" className="glass-panel" style={{
-                        padding: '12px 24px',
-                        borderRadius: '50px',
-                        color: 'white',
-                        fontWeight: '600',
-                        border: '1px solid rgba(255,255,255,0.2)'
-                    }}>Join as Artist</Link>
+                    {/* Secondary Gradient Orb */}
+                    <motion.div
+                        animate={{
+                            scale: [1.2, 1, 1.2],
+                            opacity: [0.3, 0.4, 0.3],
+                        }}
+                        transition={{
+                            duration: 10,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                        style={{
+                            position: 'absolute',
+                            bottom: '10%',
+                            right: '10%',
+                            width: '500px',
+                            height: '500px',
+                            background: 'radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%)',
+                            filter: 'blur(60px)',
+                        }}
+                    />
+
+                    {/* Accent Orb */}
+                    <motion.div
+                        animate={{
+                            x: [0, 100, 0],
+                            y: [0, -50, 0],
+                        }}
+                        transition={{
+                            duration: 15,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                        style={{
+                            position: 'absolute',
+                            top: '50%',
+                            right: '30%',
+                            width: '400px',
+                            height: '400px',
+                            background: 'radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, transparent 70%)',
+                            filter: 'blur(60px)',
+                        }}
+                    />
+
+                    {/* Grid Pattern */}
+                    <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundImage: `
+                            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)
+                        `,
+                        backgroundSize: '50px 50px',
+                        maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 70%)'
+                    }} />
+                </div>
+
+                <div className="container" style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    position: 'relative',
+                    zIndex: 1
+                }}>
+                    {/* Badge */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 16px',
+                            background: 'rgba(124, 58, 237, 0.15)',
+                            border: '1px solid rgba(124, 58, 237, 0.3)',
+                            borderRadius: '50px',
+                            marginBottom: '32px'
+                        }}
+                    >
+                        <Sparkles size={16} color="#a78bfa" />
+                        <span style={{ fontSize: '0.875rem', color: '#a78bfa', fontWeight: '500' }}>
+                            The Premier Art Platform
+                        </span>
+                    </motion.div>
+
+                    {/* Main Heading */}
+                    <motion.h1
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.2 }}
+                        style={{
+                            fontSize: 'clamp(2.5rem, 8vw, 5rem)',
+                            fontWeight: '800',
+                            lineHeight: '1.1',
+                            marginBottom: '24px',
+                            maxWidth: '900px'
+                        }}
+                    >
+                        Where <span className="text-gradient">Artists</span> Meet
+                        <br />Their Audience
+                    </motion.h1>
+
+                    {/* Subtitle */}
+                    <motion.p
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.4 }}
+                        style={{
+                            fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+                            color: 'var(--color-text-muted)',
+                            maxWidth: '600px',
+                            marginBottom: '40px',
+                            lineHeight: '1.7'
+                        }}
+                    >
+                        Showcase your portfolio, connect with collectors, sell prints,
+                        and accept commissions. Your creative journey starts here.
+                    </motion.p>
+
+                    {/* CTA Buttons */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.6 }}
+                        style={{
+                            display: 'flex',
+                            gap: '16px',
+                            flexWrap: 'wrap',
+                            justifyContent: 'center',
+                            marginBottom: '60px'
+                        }}
+                    >
+                        <Link to="/explore" className="btn-primary">
+                            <Globe size={20} />
+                            Explore Gallery
+                        </Link>
+                        <Link to="/register" className="btn-secondary">
+                            <Palette size={20} />
+                            Join as Artist
+                        </Link>
+                    </motion.div>
+
+                    {/* Stats Row */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.8 }}
+                        style={{
+                            display: 'flex',
+                            gap: '40px',
+                            flexWrap: 'wrap',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        {stats.map((stat, index) => (
+                            <motion.div
+                                key={index}
+                                whileHover={{ scale: 1.05 }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px'
+                                }}
+                            >
+                                <div style={{
+                                    width: '48px',
+                                    height: '48px',
+                                    borderRadius: '12px',
+                                    background: 'var(--glass-bg)',
+                                    border: '1px solid var(--glass-border)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <stat.icon size={22} color="#a78bfa" />
+                                </div>
+                                <div style={{ textAlign: 'left' }}>
+                                    <p style={{ fontSize: '1.5rem', fontWeight: '700' }}>{stat.value}</p>
+                                    <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{stat.label}</p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </div>
+
+                {/* Scroll Indicator */}
+                <motion.div
+                    animate={{ y: [0, 10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    style={{
+                        position: 'absolute',
+                        bottom: '40px',
+                        left: '50%',
+                        transform: 'translateX(-50%)'
+                    }}
+                >
+                    <div style={{
+                        width: '30px',
+                        height: '50px',
+                        borderRadius: '15px',
+                        border: '2px solid rgba(255,255,255,0.2)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        paddingTop: '10px'
+                    }}>
+                        <motion.div
+                            animate={{ y: [0, 15, 0], opacity: [1, 0.3, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                            style={{
+                                width: '6px',
+                                height: '10px',
+                                borderRadius: '3px',
+                                background: 'var(--color-primary-glow)'
+                            }}
+                        />
+                    </div>
+                </motion.div>
+            </section>
+
+            {/* Features Section */}
+            <section style={{
+                padding: '100px 0',
+                position: 'relative',
+                background: 'linear-gradient(180deg, transparent 0%, rgba(124, 58, 237, 0.03) 50%, transparent 100%)'
+            }}>
+                <div className="container">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                        style={{ textAlign: 'center', marginBottom: '60px' }}
+                    >
+                        <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: '700', marginBottom: '16px' }}>
+                            Everything You Need to <span className="text-gradient">Succeed</span>
+                        </h2>
+                        <p style={{ color: 'var(--color-text-muted)', maxWidth: '500px', margin: '0 auto' }}>
+                            A complete platform designed for artists who want to share their passion and build a career.
+                        </p>
+                    </motion.div>
+
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                        gap: '24px'
+                    }}>
+                        {features.map((feature, index) => (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.6, delay: index * 0.1 }}
+                                whileHover={{ y: -8, scale: 1.02 }}
+                                onHoverStart={() => setActiveFeature(index)}
+                                className="glass-panel"
+                                style={{
+                                    padding: '32px',
+                                    cursor: 'pointer',
+                                    position: 'relative',
+                                    overflow: 'hidden'
+                                }}
+                            >
+                                {/* Glow effect on active */}
+                                <AnimatePresence>
+                                    {activeFeature === index && (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            style={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                height: '3px',
+                                                background: `linear-gradient(90deg, transparent, ${feature.color}, transparent)`
+                                            }}
+                                        />
+                                    )}
+                                </AnimatePresence>
+
+                                <div style={{
+                                    width: '56px',
+                                    height: '56px',
+                                    borderRadius: '16px',
+                                    background: `${feature.color}20`,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginBottom: '20px'
+                                }}>
+                                    <feature.icon size={28} color={feature.color} />
+                                </div>
+                                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '12px' }}>
+                                    {feature.title}
+                                </h3>
+                                <p style={{ color: 'var(--color-text-muted)', lineHeight: '1.6' }}>
+                                    {feature.description}
+                                </p>
+                            </motion.div>
+                        ))}
+                    </div>
                 </div>
             </section>
 
-            {/* Featured Gallery */}
-            <section className="container" style={{ padding: '0 0 50px 0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
-                    <h2 style={{ fontSize: '2rem', fontWeight: '700' }}>Featured Artworks</h2>
-                    <Link to="/explore" style={{ color: 'var(--color-primary-glow)', fontWeight: '600' }}>View All &rarr;</Link>
-                </div>
+            {/* Featured Gallery Section */}
+            <section style={{ padding: '80px 0 120px' }}>
+                <div className="container">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-end',
+                            marginBottom: '40px',
+                            flexWrap: 'wrap',
+                            gap: '20px'
+                        }}
+                    >
+                        <div>
+                            <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: '700', marginBottom: '8px' }}>
+                                Featured <span className="text-gradient">Artworks</span>
+                            </h2>
+                            <p style={{ color: 'var(--color-text-muted)' }}>
+                                Discover exceptional pieces from talented artists worldwide
+                            </p>
+                        </div>
+                        <Link
+                            to="/explore"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                color: 'var(--color-primary-glow)',
+                                fontWeight: '600',
+                                transition: 'gap 0.3s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.gap = '12px'}
+                            onMouseLeave={(e) => e.currentTarget.style.gap = '8px'}
+                        >
+                            View All Artworks <ArrowRight size={20} />
+                        </Link>
+                    </motion.div>
 
-                <MasonryGrid artworks={featuredArtworks} />
+                    {isLoading ? (
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                            gap: '24px'
+                        }}>
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="skeleton" style={{ height: '300px' }} />
+                            ))}
+                        </div>
+                    ) : featuredArtworks.length > 0 ? (
+                        <MasonryGrid artworks={featuredArtworks} />
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            style={{
+                                textAlign: 'center',
+                                padding: '80px 20px',
+                                background: 'var(--glass-bg)',
+                                borderRadius: 'var(--border-radius-xl)',
+                                border: '1px solid var(--glass-border)'
+                            }}
+                        >
+                            <Palette size={64} color="var(--color-text-subtle)" style={{ marginBottom: '24px' }} />
+                            <h3 style={{ fontSize: '1.5rem', marginBottom: '12px' }}>No Artworks Yet</h3>
+                            <p style={{ color: 'var(--color-text-muted)', marginBottom: '24px' }}>
+                                Be the first to share your masterpiece with the world
+                            </p>
+                            <Link to="/register" className="btn-primary">
+                                Start Creating
+                            </Link>
+                        </motion.div>
+                    )}
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section style={{
+                padding: '100px 0',
+                position: 'relative',
+                overflow: 'hidden'
+            }}>
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%)',
+                    zIndex: -1
+                }} />
+
+                <div className="container">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                        className="glass-panel"
+                        style={{
+                            padding: 'clamp(40px, 8vw, 80px)',
+                            textAlign: 'center',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {/* Decorative elements */}
+                        <div style={{
+                            position: 'absolute',
+                            top: '-50px',
+                            right: '-50px',
+                            width: '200px',
+                            height: '200px',
+                            background: 'radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%)',
+                            borderRadius: '50%'
+                        }} />
+                        <div style={{
+                            position: 'absolute',
+                            bottom: '-50px',
+                            left: '-50px',
+                            width: '200px',
+                            height: '200px',
+                            background: 'radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, transparent 70%)',
+                            borderRadius: '50%'
+                        }} />
+
+                        <Star size={48} color="#f59e0b" style={{ marginBottom: '24px' }} />
+                        <h2 style={{
+                            fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+                            fontWeight: '700',
+                            marginBottom: '16px'
+                        }}>
+                            Ready to Share Your Art?
+                        </h2>
+                        <p style={{
+                            color: 'var(--color-text-muted)',
+                            maxWidth: '500px',
+                            margin: '0 auto 32px',
+                            fontSize: '1.1rem'
+                        }}>
+                            Join thousands of artists already growing their audience and selling their work on ArtFolio.
+                        </p>
+                        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            <Link to="/register" className="btn-primary">
+                                Create Free Account
+                            </Link>
+                            <Link to="/explore" className="btn-secondary">
+                                Browse Gallery
+                            </Link>
+                        </div>
+                    </motion.div>
+                </div>
             </section>
         </div>
     );

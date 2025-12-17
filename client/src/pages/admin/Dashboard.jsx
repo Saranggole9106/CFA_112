@@ -20,7 +20,7 @@ const AdminDashboard = () => {
     const [flaggedArtworks, setFlaggedArtworks] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const API_URL = 'http://localhost:5001/api';
+    const API_URL = '/api';
 
     useEffect(() => {
         fetchStats();

@@ -26,33 +26,9 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const Artwork = require('../models/Artwork');
-const jwt = require('jsonwebtoken');
+const { verifyToken, verifyArtist } = require('../middleware/auth');
 
-// ============================================================================
-// MIDDLEWARE - TOKEN VERIFICATION
-// ============================================================================
-
-/**
- * Verify Token Middleware
- * 
- * Authenticates user by checking JWT token.
- * All order routes require authentication.
- */
-const verifyToken = (req, res, next) => {
-    const token = req.header('Authorization');
-    if (!token) return res.status(401).json({ message: 'Access Denied' });
-
-    try {
-        const verified = jwt.verify(
-            token.split(" ")[1],
-            process.env.JWT_SECRET || 'secretKey'
-        );
-        req.user = verified;
-        next();
-    } catch (err) {
-        res.status(400).json({ message: 'Invalid Token' });
-    }
-};
+// Middleware imported from ../middleware/auth.js
 
 // ============================================================================
 // ROUTE: CREATE ORDER (PURCHASE ARTWORK)
@@ -108,12 +84,32 @@ router.post('/', verifyToken, async (req, res) => {
         // Extract artwork ID from request
         const { artworkId } = req.body;
 
+        // Validate artworkId
+        if (!artworkId) {
+            return res.status(400).json({ message: 'Artwork ID is required' });
+        }
+
         // Find the artwork to get its details and price
         const artwork = await Artwork.findById(artworkId);
 
         // Check if artwork exists
         if (!artwork) {
             return res.status(404).json({ message: 'Artwork not found' });
+        }
+
+        // Check if artwork is for sale
+        if (!artwork.isForSale) {
+            return res.status(400).json({ message: 'This artwork is not available for purchase' });
+        }
+
+        // Check if artwork has a price
+        if (!artwork.price || artwork.price <= 0) {
+            return res.status(400).json({ message: 'This artwork does not have a valid price' });
+        }
+
+        // Prevent buying own artwork
+        if (artwork.artist.toString() === req.user._id.toString()) {
+            return res.status(400).json({ message: 'You cannot purchase your own artwork' });
         }
 
         // Create new order document
@@ -128,11 +124,6 @@ router.post('/', verifyToken, async (req, res) => {
         const savedOrder = await newOrder.save();
 
         // Return order confirmation
-        // In real app, would also:
-        // - Send email confirmation
-        // - Update inventory
-        // - Process payment
-        // - Generate invoice
         res.status(201).json(savedOrder);
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -191,7 +182,7 @@ router.post('/', verifyToken, async (req, res) => {
  * - Track which artworks sell best
  * - See who's buying
  */
-router.get('/sales/history', verifyToken, async (req, res) => {
+router.get('/sales/history', verifyArtist, async (req, res) => {
     try {
         // Log for debugging
         console.log(`Fetching sales history for artist: ${req.user._id}`);

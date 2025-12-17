@@ -25,63 +25,15 @@
 
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Artwork = require('../models/Artwork');
 const Order = require('../models/Order');
 const Commission = require('../models/Commission');
+const { verifyAdmin } = require('../middleware/auth');
 
-// ============================================================================
-// MIDDLEWARE - ADMIN VERIFICATION
-// ============================================================================
+// Middleware imported from ../middleware/auth.js
 
-/**
- * Verify Admin Middleware
- * 
- * Checks if user has admin role before allowing access.
- * More restrictive than regular verifyToken - requires admin role.
- * 
- * Process:
- * 1. Check if Authorization header exists
- * 2. Verify JWT token is valid
- * 3. Check if user role is 'admin'
- * 4. If all checks pass, allow access
- * 5. Otherwise, deny access
- * 
- * @param {Object} req - Express request
- * @param {Object} res - Express response
- * @param {Function} next - Next middleware
- */
-const verifyAdmin = (req, res, next) => {
-    // Get token from Authorization header
-    const token = req.header('Authorization');
-
-    // Check if token exists
-    if (!token) {
-        return res.status(401).json({ message: 'Access Denied' });
-    }
-
-    try {
-        // Verify and decode token
-        const verified = jwt.verify(
-            token.split(" ")[1],
-            process.env.JWT_SECRET || 'secretKey'
-        );
-
-        // Check if user role is admin
-        if (verified.role !== 'admin') {
-            return res.status(403).json({ message: 'Admin access required' });
-        }
-
-        // Add user info to request
-        req.user = verified;
-
-        // Continue to route handler
-        next();
-    } catch (err) {
-        res.status(400).json({ message: 'Invalid Token' });
-    }
-};
+// verifyAdmin middleware is imported from ../middleware/auth.js
 
 // ============================================================================
 // ROUTE: GET PLATFORM STATISTICS

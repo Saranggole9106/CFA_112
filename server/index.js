@@ -79,12 +79,14 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 /**
  * MongoDB Connection
  * Connects to MongoDB using the connection string from .env file
+ * Falls back to local MongoDB if MONGO_URI is not set
  * 
  * MONGO_URI format: mongodb://localhost:27017/artfolio
  * or MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/dbname
  */
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('MongoDB Connection Successful'))
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/artfolio';
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('MongoDB Connection Successful -', MONGO_URI.includes('localhost') ? 'Local' : 'Atlas'))
     .catch(err => {
         console.error('MongoDB Connection Error:', err);
         // Server continues running even if DB connection fails

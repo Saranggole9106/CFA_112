@@ -24,35 +24,11 @@
 const express = require('express');
 const router = express.Router();
 const Artwork = require('../models/Artwork');
-const jwt = require('jsonwebtoken');
 const multer = require('multer');  // File upload middleware
 const path = require('path');      // Path utilities
+const { verifyToken } = require('../middleware/auth');
 
-// ============================================================================
-// MIDDLEWARE - TOKEN VERIFICATION
-// ============================================================================
-
-/**
- * Verify Token Middleware
- * 
- * Authenticates user by checking JWT token.
- * Used by protected routes (upload, like, comment).
- */
-const verifyToken = (req, res, next) => {
-    const token = req.header('Authorization');
-    if (!token) return res.status(401).json({ message: 'Access Denied' });
-
-    try {
-        const verified = jwt.verify(
-            token.split(" ")[1],
-            process.env.JWT_SECRET || 'secretKey'
-        );
-        req.user = verified;
-        next();
-    } catch (err) {
-        res.status(400).json({ message: 'Invalid Token' });
-    }
-};
+// Middleware imported from ../middleware/auth.js
 
 // ============================================================================
 // FILE UPLOAD CONFIGURATION (MULTER)
@@ -376,23 +352,51 @@ router.post('/', verifyToken, upload.single('image'), async (req, res) => {
     }
 
     try {
-        // Construct image URL
-        // Format: http://localhost:5001/uploads/1703251234567.jpg
-        const imageUrl = `http://localhost:${process.env.PORT || 5000}/uploads/${req.file.filename}`;
+        // Validate title
+        if (!req.body.title || req.body.title.trim().length < 1) {
+            return res.status(400).json({ message: 'Title is required' });
+        }
+
+        // Validate price if provided
+        if (req.body.price !== undefined && req.body.price !== '') {
+            const price = parseFloat(req.body.price);
+            if (isNaN(price) || price < 0) {
+                return res.status(400).json({ message: 'Price must be a positive number' });
+            }
+        }
+
+        // Read the uploaded file and convert to Base64
+        const fs = require('fs');
+        const imagePath = req.file.path;
+        const imageBuffer = fs.readFileSync(imagePath);
+        const base64Image = imageBuffer.toString('base64');
+        const mimeType = req.file.mimetype;
+
+        // Create data URL for storing in MongoDB
+        const imageUrl = `data:${mimeType};base64,${base64Image}`;
+
+        // Delete the temporary file after reading
+        fs.unlinkSync(imagePath);
+
+        // Determine if artwork is for sale
+        // If price is provided, artwork is for sale
+        const hasPrice = req.body.price && parseFloat(req.body.price) > 0;
+        const isForSale = req.body.isForSale === 'true' || req.body.isForSale === true || hasPrice;
 
         // Create new artwork document
         const newArtwork = new Artwork({
             title: req.body.title,
             description: req.body.description,
-            price: req.body.price,
+            price: req.body.price ? parseFloat(req.body.price) : undefined,
             category: req.body.category,
+            isForSale: isForSale,  // Set artwork as for sale
 
             // Parse tags from comma-separated string
             // "portrait, digital, fantasy" → ["portrait", "digital", "fantasy"]
             // .trim() removes extra spaces
             tags: req.body.tags ? req.body.tags.split(',').map(tag => tag.trim()) : [],
 
-            imageUrl: imageUrl,
+            imageUrl: imageUrl,  // Base64 data URL stored in MongoDB
             artist: req.user._id  // Current user is the artist
         });
 

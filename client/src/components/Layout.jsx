@@ -6,7 +6,7 @@ const Layout = () => {
     return (
         <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
             <Navbar />
-            <main style={{ flex: 1, paddingTop: '100px', paddingBottom: '40px' }}>
+            <main style={{ flex: 1 }}>
                 <Outlet />
             </main>
             <footer style={{
@@ -23,3 +23,4 @@ const Layout = () => {
 };
 
 export default Layout;
+
