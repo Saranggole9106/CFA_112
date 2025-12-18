@@ -1,18 +1,37 @@
+/**
+ * Explore Component (Gallery)
+ * 
+ * The main browsing interface for visitors to discover artworks.
+ * Implements a comprehensive filtering and sorting system to help users find specific content.
+ * 
+ * Features:
+ * - Real-time Search: Filters by title, description, artist name, and tags.
+ * - Categorization: Quick filters for specific art styles (Digital, Traditional, etc.).
+ * - Sorting: Sort by Recency, Popularity (likes), or Price.
+ * - View Modes: Toggles between Grid and Masonry layouts (though Masonry is currently primary).
+ * - Responsive Layout: Adapts grid columns based on screen width.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, X, Grid, LayoutGrid, Sparkles, TrendingUp, Clock, Palette } from 'lucide-react';
 import MasonryGrid from '../components/MasonryGrid';
+import { artworks as mockArtworks } from '../data/mockData';
 
 const Explore = () => {
+    // Filter State
     const [activeCategory, setActiveCategory] = useState("All");
     const [activeSort, setActiveSort] = useState("latest");
-    const [artworks, setArtworks] = useState([]);
-    const [filteredArtworks, setFilteredArtworks] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
-    const [showFilters, setShowFilters] = useState(false);
-    const [viewMode, setViewMode] = useState("grid");
+    const [showFilters, setShowFilters] = useState(false); // Mobile toggle for filters
+    const [viewMode, setViewMode] = useState("grid"); // grid | masonry
 
+    // Data State
+    const [artworks, setArtworks] = useState([]); // Master list of all artworks
+    const [filteredArtworks, setFilteredArtworks] = useState([]); // Display list after filters
+    const [loading, setLoading] = useState(true);
+
+    // Configuration Constants
     const categories = [
         { name: "All", icon: Sparkles },
         { name: "Digital", icon: Palette },
@@ -31,17 +50,32 @@ const Explore = () => {
         { value: "price-high", label: "Price: High to Low", icon: null }
     ];
 
+    /**
+     * Effect: Fetch Initial Data
+     * Loads all artworks from the API on component mount.
+     */
     useEffect(() => {
         const fetchArtworks = async () => {
             try {
                 const res = await fetch('/api/artworks');
-                const data = await res.json();
-                if (Array.isArray(data)) {
-                    setArtworks(data);
-                    setFilteredArtworks(data);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        setArtworks(data);
+                        setFilteredArtworks(data);
+                    } else {
+                        // Fallback to mock data if API returns empty
+                        console.warn("API empty, using mock data");
+                        setArtworks(mockArtworks);
+                        setFilteredArtworks(mockArtworks);
+                    }
+                } else {
+                    throw new Error("API response not ok");
                 }
             } catch (error) {
-                console.error("Failed to fetch artworks", error);
+                console.error("Failed to fetch artworks, falling back to mock data", error);
+                setArtworks(mockArtworks);
+                setFilteredArtworks(mockArtworks);
             } finally {
                 setLoading(false);
             }
@@ -49,17 +83,24 @@ const Explore = () => {
         fetchArtworks();
     }, []);
 
+    /**
+     * Effect: Apply Filters & Sort
+     * Runs whenever category, search, sort, or the master list changes.
+     * 1. Filters by Category (exact match)
+     * 2. Filters by Search Query (partial match on multiple fields)
+     * 3. Sorts the resulting list
+     */
     useEffect(() => {
         let result = [...artworks];
 
-        // Filter by category
+        // 1. Category Filter
         if (activeCategory !== "All") {
             result = result.filter(artwork =>
                 artwork.category?.toLowerCase() === activeCategory.toLowerCase()
             );
         }
 
-        // Filter by search query
+        // 2. Search Filter
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             result = result.filter(artwork =>
@@ -70,7 +111,7 @@ const Explore = () => {
             );
         }
 
-        // Sort
+        // 3. Sorting Logic
         switch (activeSort) {
             case "latest":
                 result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -91,6 +132,7 @@ const Explore = () => {
         setFilteredArtworks(result);
     }, [activeCategory, searchQuery, activeSort, artworks]);
 
+    // Animation Variants for Grid Items
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -190,7 +232,7 @@ const Explore = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.3 }}
                 >
-                    {/* Category Pills */}
+                    {/* Category Pills - Horizontal Scrollable on Mobile */}
                     <div style={{
                         display: 'flex',
                         justifyContent: 'center',
@@ -283,7 +325,7 @@ const Explore = () => {
                                 </select>
                             </div>
 
-                            {/* View Mode Toggle */}
+                            {/* View Mode Toggle (Grid/Masonry) */}
                             <div style={{
                                 display: 'flex',
                                 background: 'rgba(0,0,0,0.3)',
@@ -300,6 +342,7 @@ const Explore = () => {
                                         display: 'flex',
                                         alignItems: 'center'
                                     }}
+                                    title="Grid View"
                                 >
                                     <Grid size={18} />
                                 </button>
@@ -313,6 +356,7 @@ const Explore = () => {
                                         display: 'flex',
                                         alignItems: 'center'
                                     }}
+                                    title="Masonry View"
                                 >
                                     <LayoutGrid size={18} />
                                 </button>
@@ -322,10 +366,11 @@ const Explore = () => {
                 </motion.div>
             </section>
 
-            {/* Artworks Grid */}
+            {/* Artworks Content Area */}
             <section className="container">
                 <AnimatePresence mode="wait">
                     {loading ? (
+                        // Skeleton Loaders
                         <motion.div
                             key="loading"
                             initial={{ opacity: 0 }}
@@ -349,6 +394,7 @@ const Explore = () => {
                             ))}
                         </motion.div>
                     ) : filteredArtworks.length > 0 ? (
+                        // Results Grid
                         <motion.div
                             key="content"
                             variants={containerVariants}
@@ -358,6 +404,7 @@ const Explore = () => {
                             <MasonryGrid artworks={filteredArtworks} />
                         </motion.div>
                     ) : (
+                        // Empty State
                         <motion.div
                             key="empty"
                             initial={{ opacity: 0, y: 20 }}

@@ -1,14 +1,32 @@
+/**
+ * Home Component (Landing Page)
+ * 
+ * The entry point for the ArtFolio application.
+ * Designed to immediately impress visitors with high-quality visuals and clear value propositions.
+ * 
+ * Features:
+ * - Immersive Hero Section: Uses animated gradient orbs and glassmorphism.
+ * - Value Proposition: "Showcase", "Build", "Sell", "Discover" cards.
+ * - Social Proof: Live stats counter (mocked for now) and featured artworks.
+ * - Call to Action (CTA): Prompts both collectors and artists to sign up or browse.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Palette, Heart, ShoppingBag, Users, Award, ArrowRight, Star, Zap, Globe } from 'lucide-react';
 import MasonryGrid from '../components/MasonryGrid';
+import { artworks as mockArtworks } from '../data/mockData';
 
 const Home = () => {
+    // Data State to hold featured artworks (fetched from API)
     const [featuredArtworks, setFeaturedArtworks] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Animation State for cycling through feature highlights
     const [activeFeature, setActiveFeature] = useState(0);
 
+    // Static Content Configuration
     const features = [
         {
             icon: Palette,
@@ -43,16 +61,31 @@ const Home = () => {
         { value: "$2M+", label: "Earned", icon: Zap }
     ];
 
+    /**
+     * Effect: Fetch Featured Artworks
+     * Retrieves the latest artworks to display in the "Featured" section.
+     * Limits the result to 8 items for a clean layout.
+     */
     useEffect(() => {
         const fetchArtworks = async () => {
             try {
+                // Attempt to fetch from API
                 const res = await fetch('/api/artworks');
                 if (res.ok) {
                     const data = await res.json();
-                    setFeaturedArtworks(data.slice(0, 8));
+                    if (Array.isArray(data) && data.length > 0) {
+                        setFeaturedArtworks(data.slice(0, 8));
+                    } else {
+                        // API empty -> Use Mock Data
+                        console.warn('API returned empty, using mock data');
+                        setFeaturedArtworks(mockArtworks.slice(0, 8));
+                    }
+                } else {
+                    throw new Error('API response not ok');
                 }
             } catch (err) {
-                console.error('Failed to fetch featured artworks', err);
+                console.error('Failed to fetch featured artworks, falling back to mock data', err);
+                setFeaturedArtworks(mockArtworks.slice(0, 8));
             } finally {
                 setIsLoading(false);
             }
@@ -60,6 +93,11 @@ const Home = () => {
         fetchArtworks();
     }, []);
 
+    /**
+     * Effect: Cycle Active Feature
+     * Automatically rotates the "active" highlight in the features section every 3 seconds
+     * to draw attention to different value props.
+     */
     useEffect(() => {
         const interval = setInterval(() => {
             setActiveFeature((prev) => (prev + 1) % features.length);
@@ -69,7 +107,10 @@ const Home = () => {
 
     return (
         <div style={{ minHeight: '100vh', overflow: 'hidden' }}>
-            {/* Hero Section */}
+            {/* 
+                HERO SECTION 
+                Contains the main headline, animated background orbs, and primary CTAs.
+            */}
             <section style={{
                 position: 'relative',
                 minHeight: '100vh',
@@ -79,14 +120,13 @@ const Home = () => {
                 paddingTop: '100px',
                 paddingBottom: '60px'
             }}>
-                {/* Animated Background */}
+                {/* Background Layer: Animated Gradient Orbs */}
                 <div style={{
                     position: 'absolute',
                     inset: 0,
                     overflow: 'hidden',
                     zIndex: -1
                 }}>
-                    {/* Primary Gradient Orb */}
                     <motion.div
                         animate={{
                             scale: [1, 1.2, 1],
@@ -107,8 +147,6 @@ const Home = () => {
                             filter: 'blur(60px)',
                         }}
                     />
-
-                    {/* Secondary Gradient Orb */}
                     <motion.div
                         animate={{
                             scale: [1.2, 1, 1.2],
@@ -129,30 +167,7 @@ const Home = () => {
                             filter: 'blur(60px)',
                         }}
                     />
-
-                    {/* Accent Orb */}
-                    <motion.div
-                        animate={{
-                            x: [0, 100, 0],
-                            y: [0, -50, 0],
-                        }}
-                        transition={{
-                            duration: 15,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                        }}
-                        style={{
-                            position: 'absolute',
-                            top: '50%',
-                            right: '30%',
-                            width: '400px',
-                            height: '400px',
-                            background: 'radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, transparent 70%)',
-                            filter: 'blur(60px)',
-                        }}
-                    />
-
-                    {/* Grid Pattern */}
+                    {/* Grid Overlay for Texture */}
                     <div style={{
                         position: 'absolute',
                         inset: 0,
@@ -165,6 +180,7 @@ const Home = () => {
                     }} />
                 </div>
 
+                {/* Hero Content */}
                 <div className="container" style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -173,7 +189,6 @@ const Home = () => {
                     position: 'relative',
                     zIndex: 1
                 }}>
-                    {/* Badge */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -195,7 +210,6 @@ const Home = () => {
                         </span>
                     </motion.div>
 
-                    {/* Main Heading */}
                     <motion.h1
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -212,7 +226,6 @@ const Home = () => {
                         <br />Their Audience
                     </motion.h1>
 
-                    {/* Subtitle */}
                     <motion.p
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -229,7 +242,6 @@ const Home = () => {
                         and accept commissions. Your creative journey starts here.
                     </motion.p>
 
-                    {/* CTA Buttons */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -252,7 +264,7 @@ const Home = () => {
                         </Link>
                     </motion.div>
 
-                    {/* Stats Row */}
+                    {/* Stats Panel */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -295,7 +307,7 @@ const Home = () => {
                     </motion.div>
                 </div>
 
-                {/* Scroll Indicator */}
+                {/* Animated Scroll Down Indicator */}
                 <motion.div
                     animate={{ y: [0, 10, 0] }}
                     transition={{ duration: 2, repeat: Infinity }}
@@ -329,7 +341,10 @@ const Home = () => {
                 </motion.div>
             </section>
 
-            {/* Features Section */}
+            {/* 
+                FEATURES SECTION
+                Highlights core platform capabilities (Showcase, Community, Commerce).
+            */}
             <section style={{
                 padding: '100px 0',
                 position: 'relative',
@@ -373,7 +388,7 @@ const Home = () => {
                                     overflow: 'hidden'
                                 }}
                             >
-                                {/* Glow effect on active */}
+                                {/* Active State Highlight Line */}
                                 <AnimatePresence>
                                     {activeFeature === index && (
                                         <motion.div
@@ -416,7 +431,10 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Featured Gallery Section */}
+            {/* 
+                FEATURED GALLERY
+                A preview of the content available on the site.
+            */}
             <section style={{ padding: '80px 0 120px' }}>
                 <div className="container">
                     <motion.div
@@ -495,19 +513,15 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* CTA Section */}
+            {/* 
+                BOTTOM CTA 
+                Final push to get users to register.
+            */}
             <section style={{
                 padding: '100px 0',
                 position: 'relative',
                 overflow: 'hidden'
             }}>
-                <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%)',
-                    zIndex: -1
-                }} />
-
                 <div className="container">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
@@ -522,26 +536,6 @@ const Home = () => {
                             overflow: 'hidden'
                         }}
                     >
-                        {/* Decorative elements */}
-                        <div style={{
-                            position: 'absolute',
-                            top: '-50px',
-                            right: '-50px',
-                            width: '200px',
-                            height: '200px',
-                            background: 'radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%)',
-                            borderRadius: '50%'
-                        }} />
-                        <div style={{
-                            position: 'absolute',
-                            bottom: '-50px',
-                            left: '-50px',
-                            width: '200px',
-                            height: '200px',
-                            background: 'radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, transparent 70%)',
-                            borderRadius: '50%'
-                        }} />
-
                         <Star size={48} color="#f59e0b" style={{ marginBottom: '24px' }} />
                         <h2 style={{
                             fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
